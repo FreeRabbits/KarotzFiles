@@ -1,0 +1,79 @@
+#!/bin/bash
+
+source /www/cgi-bin/setup.inc
+source /www/cgi-bin/url.inc
+source /www/cgi-bin/utils.inc
+
+ReadUrlParam
+
+TTS=${URLParam[text]}
+VOICE=${URLParam[voice]}
+SPEED=${URLParam[speed]}
+NOCACHE=${URLParam[nocache]}
+MUTE=${URLParam[mute]}
+
+CheckMandatoryDirectory "${CNF_DATADIR}/Tmp"
+CheckMandatoryParameter "${TTS}" text
+
+TTS_ENGINE=0
+PLAYED=0
+CACHE=0
+
+if [ "${TTS}" == "" ] ; then
+    DATA='{"return":"1","msg":"Missing mandatory parameter(s)."}'
+    SendResponse "${DATA}"
+    exit 0
+fi
+
+if [ ! -e "${CNF_DATADIR}/Run/karotz.sleep" ]; then
+
+    if [ "${VOICE}" == "" ]; then
+        VOICE="margaux"
+    fi
+
+    if [ "${MUTE}" == "" ]; then
+        MUTE=0
+    fi
+
+    if [ "${NOCACHE}" == "" ]; then
+        NOCACHE=0
+    fi
+
+    # Calculate MD5 from text and voice
+    MD5FILE=$(echo "${TTS}${VOICE}" | md5sum | cut -d ' ' -f 1)
+
+    # If file exists and we want to cache is, play it from cache
+    if [ -e "${CNF_DATADIR}/Tmp/${MD5FILE}.mp3"  ] && [ "${NOCACHE}" == "0" ]; then
+        Log "[TTS]" "Playing sound ${MD5FILE}.mp3 from cache"
+        PlaySound ${CNF_DATADIR}/Tmp/${MD5FILE}.mp3
+        PLAYED=1
+        CACHE=1        
+    else
+        # Call Acapela with the right text and voice
+        PARAM="?MyLanguages=sonid4&MySelectedVoice="${VOICE}"&MyTextForTTS="${TTS}"&SendToVaaS=&t=1"
+        RESULT=$(eval curl -s --request POST --header "Keep-Alive:300" --header "Connection:keep-alive" --header "Content-type:application/x-www-form-urlencoded" --data '${PARAM}' http://www.acapela-group.com/demo-tts/DemoHTML5Form_V2.php)
+        # Calculate MP3 URL from http result
+        P1=$(awk -v a="${RESULT}" -v b="var myPhpVar = '" 'BEGIN{print index(a,b)}')
+        LIEN=${RESULT:${P1}+15}
+        P2=$(awk -v a="${LIEN}" -v b="'" 'BEGIN{print index(a,b)}')
+        FILERESULT=${LIEN:0:${P2}-1}
+        # Success? Then get MP3 file from Acapela
+        if [ "${FILERESULT}" != "" ]; then
+            curl -s -o ${CNF_DATADIR}/Tmp/${MD5FILE}.mp3 ${FILERESULT} >>/dev/null 2>>/dev/null
+            Log "[TTS]" "Playing downloaded TTS ${MD5FILE}.mp3"
+            PlaySound ${CNF_DATADIR}/Tmp/${MD5FILE}.mp3
+            PLAYED=1
+            # Remove from cache if we don't want a cached file
+            if [ "${NOCACHE}" == "1" ]; then
+                rm -f ${CNF_DATADIR}/Tmp/${MD5FILE}.mp3 >>/dev/null 2>>/dev/null
+            else
+                Log "[TTS]" "File stored in cache as ${CNF_DATADIR}/Tmp/${MD5FILE}.mp3"
+            fi
+        fi
+    fi
+    DATA='{"id":"'${MD5FILE}'","played":"'${PLAYED}'","cache":"'${CACHE}'","return":"'$?'","voice":"'${VOICE}'","mute":"'${MUTE}'"}'
+else
+    DATA='{"return":"1","msg":"Unable to perform action, rabbit is sleeping."}'
+fi
+
+SendResponse "${DATA}"
