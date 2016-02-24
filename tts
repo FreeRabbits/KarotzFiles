@@ -42,7 +42,7 @@ if [ ! -e "${CNF_DATADIR}/Run/karotz.sleep" ]; then
     # Calculate MD5 from text and voice
     MD5FILE=$(echo "${TTS}${VOICE}" | md5sum | cut -d ' ' -f 1)
 
-    # If file exists and we want to cache is, play it from cache
+    # If file exists and we want to cache it, play it from cache
     if [ -e "${CNF_DATADIR}/Tmp/${MD5FILE}.mp3"  ] && [ "${NOCACHE}" == "0" ]; then
         Log "[TTS]" "Playing sound ${MD5FILE}.mp3 from cache"
         PlaySound ${CNF_DATADIR}/Tmp/${MD5FILE}.mp3
