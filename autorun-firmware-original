@@ -1,0 +1,227 @@
+#!/bin/bash
+export HOME=/tmp
+export GNUPGHOME=/tmp/
+
+GPG="gpg -quiet --lock-never --ignore-time-conflict --homedir /karotz/etc/gpg"
+
+LED=/karotz/bin/led
+
+function led_orange_pulse {
+    # killall led
+    $LED -l FFA500 -p 000000 -d 700 &
+}
+
+function led_red {
+    killall led
+    $LED -l ff0000
+}
+
+function led_green {
+    killall led
+    $LED -l 00ff00
+}
+
+function load_version ()
+{
+    [ -z $1 ] && return 3
+    [ $# -ne 1 ] && return 3
+
+    if [ $1 != "rootfs" ] && [ $1 != "yaffs" ]; then
+        return 3
+    fi
+
+    #KAROTZ_SERVER=http://update.karotz.com/eabi
+    ENCODED=$(mktemp /tmp/XXXXXXXXXX)
+    GPG="gpg -quiet --lock-never --ignore-time-conflict --homedir /karotz/etc/gpg"
+
+    # add a parameter if we have an id
+
+
+    cp /mnt/usbkey/$1_version  $ENCODED || { rm -f $ENCODED ; return 1 ; }
+    
+    DECODED=$(mktemp /tmp/XXXXXXXXXX)
+    $GPG --decrypt $ENCODED > $DECODED 2> /dev/null || { logger -s "update. BAD HACKER" ; rm -f $ENCODED $DECODED ; return 2 ; } 
+
+    if [ $1 = "rootfs" ]; then
+        SERVER_ROOTFS_VERSION=$(< $DECODED head -n1)
+        SERVER_ROOTFS_MAIN_URL=$(< $DECODED head -n3 | tail -n1 | cut -d' ' -f1)
+        SERVER_ROOTFS_MAIN_BASENAME=$(basename $SERVER_ROOTFS_MAIN_URL)
+        ROOTFS_MD5=$(< $DECODED head -n3 | tail -n1 | cut -d' ' -f2)
+        return 0
+    elif [ $1 = "yaffs" ]; then
+        SERVER_YAFFS_VERSION=$(< $DECODED head -n1)
+        SERVER_YAFFS_DEPENDENCY=$(< $DECODED head -n2 | tail -n1)
+        SERVER_YAFFS_MAIN_URL=$(< $DECODED head -n3 | tail -n1 | cut -d' ' -f1)
+        SERVER_YAFFS_MAIN_BASENAME=$(basename $SERVER_YAFFS_MAIN_URL)
+        YAFFS_MD5=$(< $DECODED head -n3 | tail -n1 | cut -d' ' -f2)
+        return 0
+    else
+        return 3
+    fi
+    rm -f $ENCODED $DECODED
+}
+
+# ---------------------------------------------------------------------------
+# CHECK_NEW_VERSION
+# ---------------------------------------------------------------------------
+# Checks if a new version exists on Violet's server
+#   $1     : karotz_version (ex: 10.05.20.00)
+#   $2     : server_version (ex: 10.07.15.24)
+#   return : 0  if karotz is out of date
+#            1  if karotzmd5sum /karotz/etc/gpg/pubring.gpg is up to date
+#            2  if an error occured
+# ---------------------------------------------------------------------------
+function check_new_version {
+    [ "$1" -a "$2" ] || return 2
+
+    [[ "$1" =~ ^([0-9]{2}.){3}[0-9]{2}$ ]] || return 2
+    [[ "$2" =~ ^([0-9]{2}.){3}[0-9]{2}$ ]] || return 2
+
+    CURRENT_VERSION=${1//.}
+    LATEST_VERSION=${2//.}
+
+    [ $CURRENT_VERSION -lt $LATEST_VERSION ]
+}
+
+function SAY {
+    LD_LIBRARY_PATH=/tmp /tmp/madplay /tmp/$1.mp3 $2
+}
+
+function LOG {
+    echo $1 >> /mnt/usbkey/logmaj.txt
+}
+
+function ERROR {
+    LOG "$1" 
+    sync
+    killall musicloop.sh
+    killall madplay
+    SAY "Karotz_error"
+    SAY "error"
+    killall led
+    /karotz/bin/led -l FF0000 -b 000000 &
+    exit
+}
+
+cd $(dirname $0)
+
+led_orange_pulse
+rm /etc/inittab
+echo  "::respawn:/karotz/bin/power" > /etc/inittab
+echo  "::restart:/sbin/init" >> /etc/inittab
+echo  "::shutdown:/karotz/scripts/karotz_shutdown.sh" >> /etc/inittab
+echo  "::shutdown:/bin/umount -a -r" >> /etc/inittab
+
+rm /mnt/usbkey/logmaj.txt
+test a1a363315468944b343ffe6804a9563f =  $(md5sum /mnt/usbkey/tools2.tar  | cut -d ' ' -f1)
+if [ $? -eq 0 ]; then
+    tar -xvf /mnt/usbkey/tools2.tar -C /tmp/
+else
+    ERROR "wrong tools.tar md5" 
+fi
+
+LD_LIBRARY_PATH=/tmp /tmp/madplay /mnt/usbkey/sound/Karotz_SFX_USB.mp3
+cp -r /mnt/usbkey/sound/*.mp3 /tmp/
+ls /tmp
+
+
+#BOARD_STATUS=$(cat /etc/conf/rootfs_status)
+
+## check version
+if [ -e /etc/conf/sys_version ]; then
+    YAFFS_VERSION=$(cat /etc/conf/sys_version)
+else
+    YAFFS_VERSION="00.01.01.00"
+fi
+
+if [ -e /karotz/etc/rootfs_version ]; then
+    ROOTFS_VERSION=$(cat /karotz/etc/rootfs_version)
+else
+    ROOTFS_VERSION="00.01.01.00"
+fi
+
+load_version "rootfs"
+load_version "yaffs"
+
+
+check_new_version $ROOTFS_VERSION $SERVER_ROOTFS_VERSION
+ROOTFS_STATUS=$?
+LOG "rootfs $ROOTFS_VERSION $SERVER_ROOTFS_VERSION"
+check_new_version $YAFFS_VERSION $SERVER_YAFFS_VERSION
+YAFFS_STATUS=$?
+LOG "yaffs $YAFFS_VERSION $SERVER_YAFFS_VERSION"
+killall madplay
+if [ $ROOTFS_STATUS -eq 0 -o $YAFFS_STATUS -eq 0 ]; then
+    SAY "start"
+    SAY "maj" 
+    echo -e "#!/bin/bash\nwhile :\ndo\nLD_LIBRARY_PATH=/tmp /tmp/madplay /tmp/karotz_loop.mp3\ndone\n" > /tmp/musicloop.sh
+    chmod 755 /tmp/musicloop.sh
+    cat /tmp/musicloop.sh
+    /tmp/musicloop.sh &
+
+    ## verify md5sums
+    SIGN=$(md5sum /karotz/etc/gpg/pubring.gpg | cut -d' ' -f1)
+    echo $SIGN | GNUPGHOME=/tmp/ gpg -d  --logger-fd 2 --no-tty  --passphrase-fd 0 /mnt/usbkey/$SERVER_ROOTFS_MAIN_BASENAME.gpg  > /tmp/$SERVER_ROOTFS_MAIN_BASENAME 2> /mnt/usbkey/error.txt || ERROR "[USBKEY] bad $SERVER_ROOTFS_MAIN_BASENAME.gpg" ;
+
+    LOG "[USBKEY] MD5 checking"
+    ACTUAL_ROOTFS_MD5=$(/bin/md5sum /tmp/$SERVER_ROOTFS_MAIN_BASENAME | cut -d' ' -f1)
+    [ "$ROOTFS_MD5" == "$ACTUAL_ROOTFS_MD5" ] || { led_red ; ERROR "[USBKEY] bad $SERVER_ROOTFS_MAIN_BASENAME md5" ;  }
+    ACTUAL_YAFFS_MD5=$(/bin/md5sum /mnt/usbkey/$SERVER_YAFFS_MAIN_BASENAME | cut -d' ' -f1)
+    [ "$YAFFS_MD5"  == "$ACTUAL_YAFFS_MD5" ]  || { led_red ; ERROR "[USBKEY] bad yaffs.tar.gz md5" ;  }
+    LOG "[USBKEY] MD5 checking done"
+    mkdir /tmp/rootfs
+    gzip -d < "/tmp/$SERVER_ROOTFS_MAIN_BASENAME" | tar xf - -C "/tmp/rootfs"
+
+    ## okay everything is clear, let's rock
+
+    # flash zImage
+    LOG "[USBKEY] ## zImage"
+    /sbin/flash_eraseall /dev/mtd1
+    /sbin/nandwrite -pmn /dev/mtd1 /tmp/rootfs/zImage
+
+    # flash rootfs
+    LOG "[USBKEY] ## rootfs"
+    /sbin/flash_eraseall /dev/mtd2
+    /sbin/nandwrite -pmn /dev/mtd2 /tmp/rootfs/rootfs.img.gz
+
+    # clean yaffs
+    LOG "[USBKEY] ## yaffs"
+    . /karotz/scripts/update_functions.sh
+    cleanup_yaffs
+
+    # install yaffs
+    touch /usr/.install_yaffs_start
+    gzip -d < /mnt/usbkey/$SERVER_YAFFS_MAIN_BASENAME | tar xf - -C /usr/
+
+    cp /usr/install/sys_version /usr/etc/conf/sys_version
+    rm -rf /usr/install
+    touch /usr/.install_yaffs_stop
+    killall musicloop.sh
+    killall madplay
+    led_green
+    sleep 2
+    LOG "[USBKEY] ## All done. Remove USB and reboot."
+    SAY "Karotz_SFX_OK"
+    SAY "maj_ok"
+    cd ..
+    SAY "karotz_off"
+    echo  "::once:/sbin/reboot" >> /etc/inittab
+   
+
+else
+    LOG "already up to date"
+    #SAY "karotz_on"
+    SAY "start_wifi"
+    
+    $GPG --verify /mnt/usbkey/autorunwifi.sig 2>/dev/null
+    if [ $? -eq 0 ]; then
+        /mnt/usbkey/autorunwifi   
+    else
+        ERROR "wrong autorunwifi"
+    fi
+
+fi
+
+
+
+
