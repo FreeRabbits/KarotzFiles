@@ -6,3 +6,6 @@ This is an improved version of the tts file. It doesn't depend on tts.inc anymor
 
 autorun-firmware-original:
 Original autorun file from a USB key with firmware version 12.07.19.00
+
+waitfornetwork.sh:
+Shell script to start the WIFI of a Karotz. This could be a replacement for the "wait_until_connected.py" Python script when you don't want to use the default Karotz scripts.
