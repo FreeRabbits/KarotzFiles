@@ -9,3 +9,6 @@ Original autorun file from a USB key with firmware version 12.07.19.00
 
 waitfornetwork.sh:
 Shell script to start the WIFI of a Karotz. This could be a replacement for the "wait_until_connected.py" Python script when you don't want to use the default Karotz scripts.
+
+startup.sh
+Alternative startup script to start network (by calling waitfornetwork.sh). When successful, start other processes (like the Imortaldog deamon).
