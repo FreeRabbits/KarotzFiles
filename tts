@@ -1,79 +1,78 @@
-#!/bin/bash
+#!/usr/bin/python
 
-source /www/cgi-bin/setup.inc
-source /www/cgi-bin/url.inc
-source /www/cgi-bin/utils.inc
+# Text To Speech with Python, powered by Voice RSS
+# Create a free account at http://www.voicerss.org/
+# Copy the key and paste it below after KEY between the quotes
+# Save this file as "tts" in /www/cgi-bin, and delete tts.inc
+# 2016 - FreeRabbits.nl
 
-ReadUrlParam
+KEY = "8ff65b6875104e07b2cbc4596b24f8b6"
 
-TTS=${URLParam[text]}
-VOICE=${URLParam[voice]}
-SPEED=${URLParam[speed]}
-NOCACHE=${URLParam[nocache]}
-MUTE=${URLParam[mute]}
+import cgi
+import os
+import sys
+import urllib
+import md5
+import simplejson as json
 
-CheckMandatoryDirectory "${CNF_DATADIR}/Tmp"
-CheckMandatoryParameter "${TTS}" text
+def RunCommand(cmd):
+    return os.system(cmd)
 
-TTS_ENGINE=0
-PLAYED=0
-CACHE=0
+def IsSleeping():
+    return os.path.isfile("/tmp/karotz.sleep") or os.path.isfile("/usr/openkarotz/Run/karotz.sleep")
 
-if [ "${TTS}" == "" ] ; then
-    DATA='{"return":"1","msg":"Missing mandatory parameter(s)."}'
-    SendResponse "${DATA}"
-    exit 0
-fi
+def Language(voice):
+    lang = "fr-fr"
+    if voice in "[lucy][graham]":
+        lang = "en-gb"
+    if voice in "[heather][ryan]":
+        lang = "en-us"
+    if voice in "[andreas][julia]":
+        lang = "de-de"
+    if voice in "[chiara][vittorio]":
+        lang = "it-it"
+    if voice in "[femke][daan][jasmijn][zoe]":
+        lang = "nl-nl"
+    return lang
 
-if [ ! -e "${CNF_DATADIR}/Run/karotz.sleep" ]; then
+def PlayMP3(mp3file):
+    if not IsSleeping():
+        cmd = "madplay " + mp3file + ">/dev/null 2>&1"
+        return os.system(cmd)
 
-    if [ "${VOICE}" == "" ]; then
-        VOICE="margaux"
-    fi
+# Main program
+md5Hash = ""
+voice = ""
+result = 1
+cached = False
+fields = cgi.FieldStorage()
 
-    if [ "${MUTE}" == "" ]; then
-        MUTE=0
-    fi
+if "voice" in fields and "text" in fields:
+    voice = fields["voice"].value.lower()
+    text = fields["text"].value
+    md5Hash = md5.new(voice + text).hexdigest()
+    mp3FileName = "/tmp/" + md5Hash + ".mp3"
+    cached = os.path.isfile(mp3FileName)
+    if not cached:
+        params = urllib.urlencode({"key": KEY, "hl": Language(voice), "f": "48khz_16bit_mono", "src": text})
+        cmd = "wget -q -O " + mp3FileName + " \"http://api.voicerss.org?" + params + "\""
+        result = RunCommand(cmd)
+    if os.path.isfile(mp3FileName):
+        result = PlayMP3(mp3FileName)
 
-    if [ "${NOCACHE}" == "" ]; then
-        NOCACHE=0
-    fi
+# Create the JSON object
+data = {}
+data["return"] = (result == 0)
+data["id"] = md5Hash
+data["played"] = (result == 0)
+data["cache"] = cached
+data["voice"] = voice
 
-    # Calculate MD5 from text and voice
-    MD5FILE=$(echo "${TTS}${VOICE}" | md5sum | cut -d ' ' -f 1)
-
-    # If file exists and we want to cache it, play it from cache
-    if [ -e "${CNF_DATADIR}/Tmp/${MD5FILE}.mp3"  ] && [ "${NOCACHE}" == "0" ]; then
-        Log "[TTS]" "Playing sound ${MD5FILE}.mp3 from cache"
-        PlaySound ${CNF_DATADIR}/Tmp/${MD5FILE}.mp3
-        PLAYED=1
-        CACHE=1        
-    else
-        # Call Acapela with the right text and voice
-        PARAM="?MyLanguages=sonid4&MySelectedVoice="${VOICE}"&MyTextForTTS="${TTS}"&SendToVaaS=&t=1"
-        RESULT=$(eval curl -s --request POST --header "Keep-Alive:300" --header "Connection:keep-alive" --header "Content-type:application/x-www-form-urlencoded" --data '${PARAM}' http://www.acapela-group.com/demo-tts/DemoHTML5Form_V2.php)
-        # Calculate MP3 URL from http result
-        P1=$(awk -v a="${RESULT}" -v b="var myPhpVar = '" 'BEGIN{print index(a,b)}')
-        LIEN=${RESULT:${P1}+15}
-        P2=$(awk -v a="${LIEN}" -v b="'" 'BEGIN{print index(a,b)}')
-        FILERESULT=${LIEN:0:${P2}-1}
-        # Success? Then get MP3 file from Acapela
-        if [ "${FILERESULT}" != "" ]; then
-            curl -s -o ${CNF_DATADIR}/Tmp/${MD5FILE}.mp3 ${FILERESULT} >>/dev/null 2>>/dev/null
-            Log "[TTS]" "Playing downloaded TTS ${MD5FILE}.mp3"
-            PlaySound ${CNF_DATADIR}/Tmp/${MD5FILE}.mp3
-            PLAYED=1
-            # Remove from cache if we don't want a cached file
-            if [ "${NOCACHE}" == "1" ]; then
-                rm -f ${CNF_DATADIR}/Tmp/${MD5FILE}.mp3 >>/dev/null 2>>/dev/null
-            else
-                Log "[TTS]" "File stored in cache as ${CNF_DATADIR}/Tmp/${MD5FILE}.mp3"
-            fi
-        fi
-    fi
-    DATA='{"id":"'${MD5FILE}'","played":"'${PLAYED}'","cache":"'${CACHE}'","return":"'$?'","voice":"'${VOICE}'","mute":"'${MUTE}'"}'
-else
-    DATA='{"return":"1","msg":"Unable to perform action, rabbit is sleeping."}'
-fi
-
-SendResponse "${DATA}"
+# Write Output Response
+print "Server: OpenKarotz WebServer 1.0"
+print "Connection: close"
+print "Accept-Ranges: bytes"
+print "Content-type: text/plain"
+print "Access-Control-Allow-Origin: *"
+print
+print json.dumps(data)
