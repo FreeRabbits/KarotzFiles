@@ -1,9 +1,9 @@
 #!/usr/bin/python
 
-# Text To Speech with Python, powered by Voice RSS
+# Text To Speech with Python, powered by Voice RSS.
 # Create a free account at http://www.voicerss.org/
-# Copy the key and paste it below after KEY between the quotes
-# Save this file as "tts" in /www/cgi-bin, and delete tts.inc
+# Copy the key and paste it below after KEY between the quotes.
+# Save this file as "tts" in /www/cgi-bin, and delete tts.inc.
 # 2016 - FreeRabbits.nl
 
 KEY = "8ff65b6875104e07b2cbc4596b24f8b6"
@@ -37,7 +37,7 @@ def Language(voice):
 
 def PlayMP3(mp3file):
     if not IsSleeping():
-        cmd = "madplay " + mp3file + ">/dev/null 2>&1"
+        cmd = "madplay " + mp3file + " >/dev/null 2>&1"
         return os.system(cmd)
 
 # Main program
