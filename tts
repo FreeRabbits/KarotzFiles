@@ -37,7 +37,7 @@ def Language(voice):
 
 def PlayMP3(mp3file):
     if not IsSleeping():
-        cmd = "madplay " + mp3file + " >/dev/null 2>&1"
+        cmd = "/usr/bin/madplay -A6 " + mp3file + " >/dev/null 2>&1"
         return os.system(cmd)
 
 # Main program
