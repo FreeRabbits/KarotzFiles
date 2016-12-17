@@ -54,7 +54,7 @@ if "voice" in fields and "text" in fields:
     mp3FileName = "/tmp/" + md5Hash + ".mp3"
     cached = os.path.isfile(mp3FileName)
     if not cached:
-        params = urllib.urlencode({"key": KEY, "hl": Language(voice), "f": "48khz_16bit_mono", "src": text})
+        params = urllib.urlencode({"key": KEY, "hl": Language(voice), "f": "48khz_16bit_mono", "r": "1", "src": text})
         baseUrl = "http://api.voicerss.org"
         cmd = "wget -q -O %(mp3)s \"%(url)s?%(params)s\"" % { "mp3": mp3FileName, "url": baseUrl, "params": params }
         result = RunCommand(cmd)
