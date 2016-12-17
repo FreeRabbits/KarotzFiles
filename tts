@@ -6,7 +6,7 @@
 # Save this file as "tts" in /www/cgi-bin, and delete tts.inc.
 # 2016 - FreeRabbits.nl
 
-KEY = "8ff65b6875104e07b2cbc4596b24f8b6"
+KEY = "your-api-key-here"
 
 import cgi
 import os
@@ -55,7 +55,8 @@ if "voice" in fields and "text" in fields:
     cached = os.path.isfile(mp3FileName)
     if not cached:
         params = urllib.urlencode({"key": KEY, "hl": Language(voice), "f": "48khz_16bit_mono", "src": text})
-        cmd = "wget -q -O " + mp3FileName + " \"http://api.voicerss.org?" + params + "\""
+        baseUrl = "http://api.voicerss.org"
+        cmd = "wget -q -O %(mp3)s \"%(url)s?%(params)s\"" % { "mp3": mp3FileName, "url": baseUrl, "params": params }
         result = RunCommand(cmd)
     if os.path.isfile(mp3FileName):
         result = PlayMP3(mp3FileName)
