@@ -4,17 +4,17 @@ Some files for your Karotz.
 ---
 
 ### tts1:
-This is a replacement for the original TTS file from OpenKarotz, since Acapela doesn't support their TTS anymore. This file uses TTS from VoiceRSS.org (see also comment). Place the contents of this file in /www/cgi-bin/tts of your Karotz running OpenKarotz (overwrite the contents of the current file). Give it execute permission (chmod 755). If it doesn't work, try dos2unix tts
+This is a replacement for the original TTS file from OpenKarotz, since Acapela doesn't support their TTS anymore. This file uses TTS from VoiceRSS.org (see also comment). Place the contents of this file in /www/cgi-bin/tts of your Karotz running OpenKarotz (overwrite the contents of the current file). Give it execute permission (`chmod 755`). If it doesn't work, try `dos2unix tts`.
 
 ---
 
 ### tts2:
-This is another replacement for the original TTS file from OpenKarotz, since Acapela doesn't support their TTS anymore. This file uses TTS from ResponsiveVoice.org (see also comment). Place the contents of this file in /www/cgi-bin/tts of your Karotz running OpenKarotz (overwrite the contents of the current file). Give it execute permission (chmod 755). If it doesn't work, try dos2unix tts
+This is another replacement for the original TTS file from OpenKarotz, since Acapela doesn't support their TTS anymore. This file uses TTS from ResponsiveVoice.org (see also comment). Place the contents of this file in /www/cgi-bin/tts of your Karotz running OpenKarotz (overwrite the contents of the current file). Give it execute permission (`chmod 755`). If it doesn't work, try `dos2unix tts`.
 
 ---
 
 ### tts3:
-This is again another replacement for the original TTS file from OpenKarotz, since Acapela doesn't support their TTS anymore. This file uses a service from ISpeech. All of the work is done by MikeyLife (karotz.mikey-life.com), and since December 2016, this TTS is also offered as patch in OpenKarotz. Place the contents of this file in /www/cgi-bin/tts of your Karotz running OpenKarotz (overwrite the contents of the current file). Give it execute permission (chmod 755). If it doesn't work, try dos2unix tts.
+This is again another replacement for the original TTS file from OpenKarotz, since Acapela doesn't support their TTS anymore. This file uses a service from ISpeech. All of the work is done by MikeyLife (karotz.mikey-life.com), and since December 2016, this TTS is also offered as patch in OpenKarotz. Place the contents of this file in /www/cgi-bin/tts of your Karotz running OpenKarotz (overwrite the contents of the current file). Give it execute permission (`chmod 755`). If it doesn't work, try `dos2unix tts`.
 You will also have to update the file "voice_list" in /www/cgi-bin, see this repo for a replacement.
 
 ---
