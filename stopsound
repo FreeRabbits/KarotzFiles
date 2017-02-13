@@ -1,0 +1,6 @@
+#!/bin/bash
+
+source /www/cgi-bin/utils.inc
+KillProcess SOUNDS
+
+SendResponse '{"return":"0"}' 
