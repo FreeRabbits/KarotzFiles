@@ -38,3 +38,13 @@ Shell script to start the WIFI of a Karotz. This could be a replacement for the 
 Alternative startup script to start network (by calling waitfornetwork.sh). When successful, start other processes (like the Imortaldog deamon).
 
 ---
+
+### PlayRadio.py
+Python script to play a internet radio station by URL. You can use this as a replacement for the bash script files from OpenKarotz. If you want to do this, replace the javascript to call this file. Don't forget: give it execute permission (`chmod 755`).
+
+---
+
+### stopsound
+Bash script to stop all sound processes. You can place this file in the /www/cgi-bin directory.
+
+---
