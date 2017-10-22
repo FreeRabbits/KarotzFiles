@@ -3,7 +3,6 @@
 # Text To Speech with Python, powered by ISpeech (http://www.ispeech.org)
 # Based on a bash script from Mikey Life (see http://karotz.mikey-life.com/www/compte/astuces/ > TTS) 
 # Save this file as "tts" in /www/cgi-bin, and delete tts.inc.
-# Also change the file /www/cgi-bin/voice_list and replace the contents with the file voice_list in this repo.
 # Provided by FreeRabbits.nl
 
 import cgi
@@ -28,14 +27,18 @@ def PlayMP3(mp3file):
 voices = [ "eurfrenchfemale", "eurfrenchmale", "cafrenchfemale", "cafrenchmale", "usenglishfemale", "usenglishmale", "ukenglishfemale", "ukenglishmale", "eurgermanfemale", "eurgermanmale", "euritalianfemale", "euritalianmale", "eurspanishfemale", "eurspanishmale", "eurdutchfemale" ]
 apiKey = "api-key-goes-here"
 md5Hash = ""
-voicename = ""
+voice = 0
+voicename = "eurfrenchfemale"
+cached = False
 cmd = ""
 result = 1
 fields = cgi.FieldStorage()
 
-if "voice" in fields and "text" in fields:
+if "voice" in fields:
     voice = int(fields["voice"].value)
-    voicename = voices[voice - 1]
+    voicename = voices[voice - 1]	
+
+if "text" in fields:
     text = fields["text"].value
     md5Hash = md5.new(voicename + text).hexdigest()
     mp3FileName = "/tmp/" + md5Hash + ".mp3"
