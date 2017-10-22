@@ -3,6 +3,7 @@
 # Text To Speech with Python, powered by ISpeech (http://www.ispeech.org)
 # Based on a bash script from Mikey Life (see http://karotz.mikey-life.com/www/compte/astuces/ > TTS) 
 # Save this file as "tts" in /www/cgi-bin, and delete tts.inc.
+# Also change the file /www/cgi-bin/voice_list and replace the contents with the file voice_list in this repo.
 # Provided by FreeRabbits.nl
 
 import cgi
