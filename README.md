@@ -1,5 +1,6 @@
 # KarotzFiles
 Some files for your Karotz.
+If you want to say hello to me, visit www.freerabbits.nl and send me a message using the contact-page.
 
 ---
 
