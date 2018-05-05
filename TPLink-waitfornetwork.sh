@@ -1,6 +1,6 @@
 #!/bin/bash
 # Free Rabbits Networking Script to connect using WIFI with the TPLink TL-WN725N adapter.
-# Put the network driver (8188eu.ko) in /usr/karotz/firmware/.
+# Put the network driver (8188eu.ko) in /usr/karotz/firmware/. Thanks to Slash for providing this driver.
 # Put this script in /usr/scripts as 'waitfornetwork.sh' (overwrite original file).
 # Change the settings in the first 6 lines below.
 
