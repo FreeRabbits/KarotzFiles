@@ -4,6 +4,11 @@ If you want to say hello to me, visit www.freerabbits.nl and send me a message u
 
 ---
 
+### TPLink-waitfornetwork.sh:
+This is a replacement for the 'waitfornetwork.sh' file from FROS. You can use this network script when you own a TPLink WN-725N Wireless N Nano USB Adapter. Use this adapter with your Karotz. Put the network driver (8188eu.ko) in /usr/karotz/firmware/. Put this script in /usr/scripts as 'waitfornetwork.sh' (overwrite original file). Change the settings in the first 6 lines below the comments.
+
+---
+
 ### tts1:
 This is a replacement for the original TTS file from OpenKarotz, since Acapela doesn't support their TTS anymore. This file uses TTS from VoiceRSS.org (see also comment). Place the contents of this file in /www/cgi-bin/tts of your Karotz running OpenKarotz (overwrite the contents of the current file). Give it execute permission (`chmod 755`). If it doesn't work, try `dos2unix tts`.
 
