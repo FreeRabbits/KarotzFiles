@@ -26,13 +26,13 @@ ISpeech doesn't work anymore since September 2019 (returning message 'result=err
 ---
 
 ### tts4:
-This is again another replacement for the original TTS file from OpenKarotz, since Acapela and ISpeech don't support their TTS anymore. This file uses the service from ResponsiveVoice. Based on TTS3 and info from karotz.mikey-life.com. Since September 2019, this TTS is also offered as the TTS enginge by OpenKarotz. Place the contents of this file in /www/cgi-bin/tts of your Karotz running OpenKarotz (overwrite the contents of the current file). Give it execute permission (`chmod 755`). If it doesn't work, try `dos2unix tts`.
+This is again another replacement for the original TTS file from OpenKarotz, since Acapela and ISpeech don't support their TTS anymore. This file uses the service from ResponsiveVoice. Based on TTS3 and info from karotz.mikey-life.com. Since September 2019, this TTS is also offered as the TTS engine by OpenKarotz. Place the contents of this file in /www/cgi-bin/tts of your Karotz running OpenKarotz (overwrite the contents of the current file). Give it execute permission (`chmod 755`). If it doesn't work, try `dos2unix tts`.
 You will also have to update the file "voice_list" in /www/cgi-bin, see this repo for a replacement.
 
 ---
 
 ### voice_list:
-This files belongs to tts3 and has to be saved in /www/cgi-bin, together with tts3 (which has to be saved as /www/cgi-bin/tts).
+This files belongs to tts4 and has to be saved in /www/cgi-bin, together with tts4 (which has to be saved as /www/cgi-bin/tts).
 
 ---
 
