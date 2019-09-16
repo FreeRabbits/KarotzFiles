@@ -21,7 +21,7 @@ This is another replacement for the original TTS file from OpenKarotz, since Aca
 
 ### tts3:
 This is again another replacement for the original TTS file from OpenKarotz, since Acapela doesn't support their TTS anymore. This file uses a service from ISpeech. All of the work is done by MikeyLife (karotz.mikey-life.com), and since December 2016, this TTS is also offered as patch in OpenKarotz. Place the contents of this file in /www/cgi-bin/tts of your Karotz running OpenKarotz (overwrite the contents of the current file). Give it execute permission (`chmod 755`). If it doesn't work, try `dos2unix tts`.
-ISpeech doesn't work anymore since September 2019 (returning message 'result=error&code=3&message=Not+enough+credits', see TTS4 for a replacement.
+ISpeech doesn't work anymore since September 2019 (returning message 'result=error&code=3&message=Not+enough+credits'), see TTS4 for a replacement.
 
 ---
 
