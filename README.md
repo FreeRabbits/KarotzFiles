@@ -56,6 +56,11 @@ Python script to play a internet radio station by URL. You can use this as a rep
 
 ---
 
+### RefreshRadioList.js
+Javascript function to change the behaviour of Karotz to retreive radiostations in the UI 'Sounds' > 'Radio'. In Free Rabbits OS, radiostations are retreived from webservices. In OpenKarotz, radiostations are retreived from the Karotz filesystem. On the top of this Javascript-file, you'll find more info and instructions.
+
+---
+
 ### stopsound
 Bash script to stop all sound processes. You can place this file in the /www/cgi-bin directory.
 
